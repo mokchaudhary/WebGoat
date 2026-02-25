@@ -32,6 +32,17 @@ jobs:
       - name: Download Dependencies
         run: mvn dependency:resolve -B
 
+      - name: Build with Maven
+        run: |
+          mvn --no-transfer-progress versions:set -DnewVersion=123
+          mvn --no-transfer-progress install -DskipTests
+      - name: Upload Maven build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-artifact-nonSeal # The name for your artifact (e.g., my-app-1.0.0.jar)
+          path: target/*.jar
+      
+
       - name: Seal Security - Fix Vulnerabilities
         uses: seal-community/cli-action@latest
         with:
@@ -44,19 +55,16 @@ jobs:
           SEAL_SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
           SEAL_SNYK_ORG_ID: "bf279eb4-3b32-4731-ba49-ea7588371789"
           SEAL_SNYK_PROJECT_ID: "5193ce84-979c-4dba-9efc-74ff35dd920f"
-
-      - name: print dependency tree
-        run: mvn dependency:tree
-        
-      - name: Generate and submit dependency graph
-        uses: advanced-security/maven-dependency-submission-action@v4
-      - name: Upload .seal-m2 as artifact
+          
+      - name: Build with Maven after Seal
+        run: |
+          mvn --no-transfer-progress versions:set -DnewVersion=123Seal
+          mvn --no-transfer-progress install -DskipTests
+      - name: Upload Maven build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sealed-m2
-          path: /home/runner/work/WebGoat/WebGoat/.seal-m2/com/thoughtworks/xstream/xstream/1.4.5/xstream-1.4.5.jar
-          if-no-files-found: error
-          retention-days: 1
-          
+          name: maven-artifact-Seal # The name for your artifact (e.g., my-app-1.0.0.jar)
+          path: target/*.jar
+
 
 
