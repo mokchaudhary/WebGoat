@@ -35,6 +35,7 @@ jobs:
         uses: seal-community/cli-action@latest
         with:
           mode: fix
+          fix_mode: ${{ github.event.inputs.fix_mode || 'remote' }}
           target: pom.xml
           token: ${{ secrets.SEAL_TOKEN }}
         env:
