@@ -27,6 +27,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: maven
 
       - name: Download Dependencies
         run: mvn dependency:resolve -B
@@ -47,11 +48,13 @@ jobs:
       - name: print dependency tree
         run: mvn dependency:tree
         
+      - name: Generate and submit dependency graph
+        uses: advanced-security/maven-dependency-submission-action@v4
       - name: Upload .seal-m2 as artifact
         uses: actions/upload-artifact@v4
         with:
           name: sealed-m2
-          path: /home/runner/work/WebGoat/WebGoat/.seal-m2/**
+          path: /home/runner/work/WebGoat/WebGoat/.seal-m2/com/thoughtworks/xstream/xstream/1.4.5/xstream-1.4.5.jar
           if-no-files-found: error
           retention-days: 1
           
